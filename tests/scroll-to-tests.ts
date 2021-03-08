@@ -1,16 +1,19 @@
 import sinon from 'sinon/pkg/sinon-esm';
-import 'chai/chai';
+import chai from 'chai'; // import for typings
 import { scrollTo, utils, easingMap } from '../src/scroll';
 import createStub from 'raf-stub';
+import { SinonStubbedMember } from 'sinon';
 
-const { assert, expect } = window.chai;
+const { assert, expect } = chai;
 
-let mockRaf;
+let mockRaf: any;
 
 describe('scroll', function () {
-    let dateNowStub;
+    let dateNowStub: SinonStubbedMember<typeof Date['now']>;
     let currentTime;
-    let requestAnimationFrameStub;
+    let requestAnimationFrameStub: SinonStubbedMember<
+        typeof window['requestAnimationFrame']
+    >;
 
     beforeEach(function () {
         mockRaf = createStub();
@@ -160,7 +163,7 @@ describe('scroll', function () {
 
     it('should throw an error when attempting to scroll with an unsupported easing function', function () {
         const options = Object.keys(easingMap).join(',');
-        const easing = 'invalidEasing';
+        const easing = 'invalidEasing' as any;
         let outerEl = document.createElement('div');
         return scrollTo(outerEl, { easing }).catch((e) => {
             assert.equal(

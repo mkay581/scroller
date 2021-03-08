@@ -88,7 +88,7 @@ export function scrollIntoView(
             element.getBoundingClientRect().top + currentContainerScrollYPos;
     }
 
-    return scrollTo(scroller, {
+    return scrollTo(scroller as Element, {
         top: elementScrollYPos,
         left: 0,
         duration,

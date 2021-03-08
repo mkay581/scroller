@@ -36,8 +36,9 @@
     "dist/**/*"
   ],
   "scripts": {
-    "test": "karma start karma.conf.js && npm run lint",
-    "test-server": "karma start karma.conf.js --single-run=false",
+    "prep-ts": "tsc --project tests/tsconfig.json",
+    "test": "npm run prep-ts && karma start karma.conf.js && npm run lint",
+    "test-server": "npm run prep-ts && karma start karma.conf.js --single-run=false",
     "preversion": "npm test",
     "build": "rm -rf dist/* && rollup -c",
     "banner": "banner-cli dist/*.js",

@@ -1,17 +1,20 @@
 import sinon from 'sinon/pkg/sinon-esm';
-import 'chai/chai'; // make window.chai available
-import * as chai from 'chai'; // import for typings
+import chai from 'chai'; // import for typings
+
 import { scrollIntoView, utils } from '../src/scroll';
 import createStub from 'raf-stub';
+import { SinonStubbedMember } from 'sinon';
 
-const { assert, expect } = (window as any).chai as typeof chai;
+const { assert, expect } = chai;
 
-let mockRaf;
+let mockRaf: any;
 
 describe('scrollIntoView', function () {
-    let dateNowStub;
+    let dateNowStub: SinonStubbedMember<typeof Date['now']>;
     let currentTime;
-    let requestAnimationFrameStub;
+    let requestAnimationFrameStub: SinonStubbedMember<
+        typeof window['requestAnimationFrame']
+    >;
 
     beforeEach(function () {
         mockRaf = createStub();
@@ -217,7 +220,9 @@ describe('scrollIntoView', function () {
         });
         dateNowStub.reset();
         dateNowStub.returns(time);
-        scrollIntoView(secondInnerEl, { duration: 10000 });
+        scrollIntoView(secondInnerEl, {
+            duration: 10000,
+        } as ScrollIntoViewOptions);
         dateNowStub.returns((time += 5000));
         requestAnimationFrameStub.yield();
         expect(bodyEl.scrollTop).to.not.equal(innerElHeight);

@@ -2,13 +2,12 @@ require('dotenv').config();
 
 module.exports = function (config) {
     config.set({
-        files: [{ pattern: 'tests/**/*.ts', type: 'module' }],
+        files: [{ pattern: 'tests/dist/**/*.js', type: 'module' }],
 
         plugins: [require.resolve('@open-wc/karma-esm'), 'karma-*'],
         esm: {
             nodeResolve: true,
             compatibility: 'min',
-            fileExtensions: ['.ts'],
             babel: true,
         },
         coverageReporter: {
