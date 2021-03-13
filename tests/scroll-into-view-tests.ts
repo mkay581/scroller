@@ -1,20 +1,16 @@
-import sinon from 'sinon/pkg/sinon-esm';
-import chai from 'chai'; // import for typings
-
+import sinon, { SinonStub } from 'sinon';
 import { scrollIntoView, utils } from '../src/scroll';
 import createStub from 'raf-stub';
-import { SinonStubbedMember } from 'sinon';
 
-const { assert, expect } = chai;
+import { expect, assert } from '@esm-bundle/chai';
 
 let mockRaf: any;
 
 describe('scrollIntoView', function () {
-    let dateNowStub: SinonStubbedMember<typeof Date['now']>;
+    let dateNowStub: SinonStub;
     let currentTime;
-    let requestAnimationFrameStub: SinonStubbedMember<
-        typeof window['requestAnimationFrame']
-    >;
+    let requestAnimationFrameStub: SinonStub;
+    let getDocumentStub: SinonStub;
 
     beforeEach(function () {
         mockRaf = createStub();
@@ -28,11 +24,16 @@ describe('scrollIntoView', function () {
         dateNowStub.onSecondCall().returns(currentTime); // set the current animation time enough time forward to simulate a time that will trigger the last frame
         currentTime += 1000;
         dateNowStub.onThirdCall().returns(currentTime); // set the current animation time enough time forward to simulate a time that will trigger the last frame
+        getDocumentStub = sinon.stub(utils, 'getDocument').returns(({
+            body: document.createElement('div'),
+            documentElement: document.createElement('div'),
+        } as unknown) as HTMLDocument);
     });
 
     afterEach(function () {
         requestAnimationFrameStub.restore();
         dateNowStub.restore();
+        getDocumentStub.restore();
     });
 
     [true, false, {}].forEach((testValue) => {
@@ -110,15 +111,14 @@ describe('scrollIntoView', function () {
         secondInnerEl.style.height = '600px';
         // setup current scroll position
         bodyEl.scrollTop = 0;
-        const getDocumentStub = sinon.stub(utils, 'getDocument').returns({
+        getDocumentStub.returns(({
             body: bodyEl,
             documentElement: bodyEl,
-        });
+        } as unknown) as HTMLDocument);
         scrollIntoView(secondInnerEl);
         mockRaf.step(3);
         setTimeout(function () {
             assert.equal(bodyEl.scrollTop, innerElHeight);
-            getDocumentStub.restore();
             document.body.removeChild(bodyEl);
             done();
         }, 0);
@@ -145,16 +145,15 @@ describe('scrollIntoView', function () {
         innerEl.style.height = '200px';
         containerEl.appendChild(innerEl);
         document.body.appendChild(bodyEl);
-        const getDocumentStub = sinon.stub(utils, 'getDocument').returns({
+        getDocumentStub.returns(({
             body: bodyEl,
             documentElement: bodyEl,
-        });
+        } as unknown) as HTMLDocument);
         assert.equal(innerEl.getBoundingClientRect().top, firstInnerElHeight); // make sure element is in right position
         scrollIntoView(innerEl);
         mockRaf.step(3);
         setTimeout(function () {
             assert.equal(bodyEl.scrollTop, firstInnerElHeight);
-            getDocumentStub.restore();
             bodyEl.removeChild(containerEl);
             done();
         }, 0);
@@ -214,10 +213,10 @@ describe('scrollIntoView', function () {
         secondInnerEl.style.height = '600px';
         // setup current scroll position
         bodyEl.scrollTop = 0;
-        const getDocumentStub = sinon.stub(utils, 'getDocument').returns({
+        getDocumentStub.returns(({
             body: bodyEl,
             documentElement: bodyEl,
-        });
+        } as unknown) as HTMLDocument);
         dateNowStub.reset();
         dateNowStub.returns(time);
         scrollIntoView(secondInnerEl, {
@@ -233,6 +232,5 @@ describe('scrollIntoView', function () {
         requestAnimationFrameStub.yield();
         expect(bodyEl.scrollTop).to.equal(innerElHeight);
         document.body.removeChild(bodyEl);
-        getDocumentStub.restore();
     });
 });

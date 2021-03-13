@@ -1,19 +1,16 @@
-import sinon from 'sinon/pkg/sinon-esm';
-import chai from 'chai'; // import for typings
+import sinon, { SinonStub } from 'sinon';
 import { scrollTo, utils, easingMap } from '../src/scroll';
 import createStub from 'raf-stub';
-import { SinonStubbedMember } from 'sinon';
 
-const { assert, expect } = chai;
+import { expect, assert } from '@esm-bundle/chai';
 
 let mockRaf: any;
 
 describe('scroll', function () {
-    let dateNowStub: SinonStubbedMember<typeof Date['now']>;
+    let dateNowStub: SinonStub;
     let currentTime;
-    let requestAnimationFrameStub: SinonStubbedMember<
-        typeof window['requestAnimationFrame']
-    >;
+    let requestAnimationFrameStub: sinon.SinonStub;
+    let getDocumentStub: SinonStub;
 
     beforeEach(function () {
         mockRaf = createStub();
@@ -27,11 +24,16 @@ describe('scroll', function () {
         dateNowStub.onSecondCall().returns(currentTime); // set the current animation time enough time forward to simulate a time that will trigger the last frame
         currentTime += 1000;
         dateNowStub.onThirdCall().returns(currentTime); // set the current animation time enough time forward to simulate a time that will trigger the last frame
+        getDocumentStub = sinon.stub(utils, 'getDocument').returns(({
+            body: document.createElement('div'),
+            documentElement: document.createElement('div'),
+        } as unknown) as HTMLDocument);
     });
 
     afterEach(function () {
         requestAnimationFrameStub.restore();
         dateNowStub.restore();
+        getDocumentStub.restore();
     });
 
     it('should throw an error when attempting to scroll anything that is not a DOM element', async function () {
@@ -105,14 +107,13 @@ describe('scroll', function () {
             documentElement: docEl,
             body: bodyElement,
         };
-        const getDocumentStub = sinon
-            .stub(utils, 'getDocument')
-            .returns(testDocumentElement);
+        getDocumentStub.returns(
+            (testDocumentElement as unknown) as HTMLDocument
+        );
         let scrollPromise = scrollTo(docEl, { top: testTo });
         mockRaf.step(3);
         return scrollPromise.then(function () {
             assert.equal(docEl.scrollTop, testTo);
-            getDocumentStub.restore();
             document.body.removeChild(docEl);
         });
     });
@@ -182,10 +183,10 @@ describe('scroll', function () {
         fakeBodyElement.appendChild(innerEl);
         document.body.appendChild(fakeBodyElement);
         const testTo = 120;
-        const getDocumentStub = sinon.stub(utils, 'getDocument').returns({
+        getDocumentStub.returns(({
             body: fakeBodyElement,
             documentElement: document.createElement('div'),
-        });
+        } as unknown) as HTMLDocument);
         scrollTo(fakeBodyElement, { top: testTo });
         mockRaf.step(3);
         setTimeout(function () {
@@ -193,7 +194,6 @@ describe('scroll', function () {
             mockRaf.step(3);
             setTimeout(function () {
                 expect(fakeBodyElement.scrollTop).to.equal(0);
-                getDocumentStub.restore();
                 document.body.removeChild(fakeBodyElement);
                 done();
             }, 0);
